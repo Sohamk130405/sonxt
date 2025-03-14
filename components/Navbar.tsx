@@ -4,6 +4,7 @@ import { NavLinks } from "@/constants";
 import { getCurrentUser } from "@/lib/session";
 import Login from "./Login";
 import ProfileMenu from "./ProfileMenu";
+import Button from "./Button";
 
 const Navbar = async () => {
   const session = await getCurrentUser();
@@ -12,7 +13,7 @@ const Navbar = async () => {
     <nav className="flexBetween navbar">
       <div className="flex-1 flexStart gap-10">
         <Link href="/">
-          <Image src="/logo.svg" width={116} height={43} alt="logo" />
+          <Image src="/logo.png" width={116} height={43} alt="logo" />
         </Link>
         <ul className="xl:flex hidden text-small gap-7">
           {NavLinks.map((link) => (
@@ -28,7 +29,7 @@ const Navbar = async () => {
           <>
             <ProfileMenu session={session} />
             <Link href="/create-project">
-              <button>Share Work</button>
+              <Button title="Share work" LeftIcon={"/upload.svg"} />
             </Link>
           </>
         ) : (

@@ -2,7 +2,7 @@ import Image from "next/image";
 import React, { MouseEventHandler } from "react";
 type Props = {
   title: string;
-  type: "button" | "submit";
+  type?: "button" | "submit";
   LeftIcon?: string | null;
   RightIcon?: string | null;
   isSubmitting?: boolean;

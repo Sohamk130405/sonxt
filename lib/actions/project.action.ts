@@ -119,7 +119,7 @@ export async function deleteProject(id: string) {
     user.projects = user.projects.filter(
       (projectId: string) => projectId.toString() !== id
     );
-    
+
     await user.save();
 
     await deleteImage(project.image);
@@ -138,16 +138,16 @@ export async function getProjects(category?: string, endCursor?: string) {
     const query: any = category ? { category } : {};
 
     const limit = 8;
-    const cursor = Number(endCursor) || 0;
-    const projects = await Project.find(query)
+    const cursor = endCursor ? { _id: { $gt: endCursor } } : {}; // Cursor query
+    const projects = await Project.find({ ...query, ...cursor })
       .sort({ _id: 1 })
-      .skip(cursor)
       .limit(limit)
       .populate("createdBy", "name email avatarUrl _id");
 
+
     const totalProjects = await Project.countDocuments(query);
-    const hasNextPage = cursor + limit < totalProjects;
-    const hasPreviousPage = cursor > 0;
+    const hasNextPage = totalProjects - limit > 0; // If we get the limit number, it means there's a next page
+    const hasPreviousPage = Boolean(endCursor);
 
     return {
       projects,
