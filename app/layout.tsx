@@ -6,6 +6,9 @@ import Footer from "@/components/Footer";
 export const metadata = {
   title: "SoNxt",
   description: "Showcase and discover remarkable developer projects",
+  icons: {
+    icon: "/logo-purple.png",
+  },
 };
 
 export default function RootLayout({
