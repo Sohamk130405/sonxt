@@ -16,17 +16,17 @@ export interface ProjectInterface {
   liveSiteUrl: string;
   githubUrl: string;
   category: string;
-  id: string;
+  _id: string;
   createdBy: {
     name: string;
     email: string;
     avatarUrl: string;
-    id: string;
+    _id: string;
   };
 }
 
 export interface UserProfile {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   description: string | null;
@@ -61,3 +61,13 @@ export interface ProjectForm {
   githubUrl: string;
   category: string;
 }
+
+export type ProjectSearch = {
+  projects: ProjectInterface[];
+  pageInfo: {
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+    startCursor: string;
+    endCursor: string;
+  };
+};
