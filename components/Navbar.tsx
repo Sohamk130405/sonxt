@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { NavLinks } from "@/constants";
 import { getCurrentUser } from "@/lib/session";
-import Logout from "./Logout";
 import Login from "./Login";
 import ProfileMenu from "./ProfileMenu";
 

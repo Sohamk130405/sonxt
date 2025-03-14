@@ -2,7 +2,7 @@
 import { connectDB } from "@/lib/mongodb";
 import Project from "@/lib/models/projects";
 import User from "@/lib/models/users";
-import { ProjectForm } from "@/common.types";
+import { ProjectForm, ProjectInterface } from "@/common.types";
 import { getCurrentUser } from "../session";
 
 export const uploadImage = async (imagePath: string) => {
@@ -83,7 +83,7 @@ export async function getProjects(category?: string, endCursor?: string) {
       .sort({ _id: 1 })
       .skip(cursor)
       .limit(limit)
-      .populate("createdBy");
+      .populate("createdBy", "name email avatarUrl _id");
 
     const totalProjects = await Project.countDocuments(query);
     const hasNextPage = cursor + limit < totalProjects;
@@ -110,7 +110,10 @@ export async function getProjects(category?: string, endCursor?: string) {
 export async function getProjectById(id: string) {
   try {
     await connectDB();
-    const project = await Project.findById(id).populate("createdBy");
+    const project = (await Project.findById(id).populate(
+      "createdBy",
+      "name email avatarUrl _id"
+    )) as ProjectInterface;
     if (!project) throw new Error("Project not found");
 
     return { success: true, project };
@@ -120,17 +123,25 @@ export async function getProjectById(id: string) {
 }
 
 // 🛠️ Get Projects of a User
-export async function getProjectsOfUser(userId: string, last: number = 4) {
+export async function getProjectsOfUser(userId: string, limit?: number) {
   try {
     await connectDB();
-    const user = await User.findById(userId).populate({
-      path: "projects",
-      options: { limit: last },
-    });
+
+    const user = await User.findById(userId)
+      .select("_id name email description avatarUrl githubUrl linkedinUrl")
+      .populate({
+        path: "projects",
+        options: limit ? { limit, sort: { _id: -1 } } : { sort: { _id: -1 } },
+        select: "title image _id",
+        populate: {
+          path: "createdBy",
+          select: "name email avatarUrl _id",
+        },
+      });
 
     if (!user) throw new Error("User not found");
 
-    return { success: true, projects: user.projects };
+    return { success: true, user };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

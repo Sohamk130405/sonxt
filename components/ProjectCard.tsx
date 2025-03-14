@@ -17,7 +17,6 @@ const getRandomViews = () => (Math.random() * (10 - 1) + 1).toFixed(1) + "K";
 
 const ProjectCard = ({
   avatarUrl,
-
   id,
   image,
   name,
@@ -30,7 +29,7 @@ const ProjectCard = ({
   return (
     <div className="flexCenter flex-col rounded-2xl drop-shadow-card">
       <Link
-        href={`/projects/${id}`}
+        href={`/project/${id}`}
         className="flexCenter group relative w-full h-full"
       >
         <Image
