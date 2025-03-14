@@ -17,6 +17,18 @@ export const uploadImage = async (imagePath: string) => {
   }
 };
 
+export const deleteImage = async (url: string) => {
+  try {
+    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/upload`, {
+      method: "DELETE",
+      body: JSON.stringify({ url }),
+    });
+    return res.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
 // 🛠️ Create Project
 export async function createProject(form: ProjectForm) {
   try {
@@ -44,15 +56,42 @@ export async function createProject(form: ProjectForm) {
 }
 
 // 🛠️ Update Project
-export async function updateProject(id: string, input: any) {
+export async function updateProject(id: string, form: ProjectForm) {
   try {
     await connectDB();
-    const updatedProject = await Project.findByIdAndUpdate(id, input, {
-      new: true,
-    });
-    if (!updatedProject) throw new Error("Project not found");
+    const session = await getCurrentUser();
+    if (!session?.user) throw new Error("Unauthorized Access");
 
-    return { success: true, project: updatedProject };
+    const project = await Project.findById(id);
+    if (!project) throw new Error("Project not found");
+
+    if (project.createdBy.toString() !== session.user._id) {
+      throw new Error("You are not authorized to update this project");
+    }
+
+    let imageUrl = form.image;
+    // Check if the image has changed
+    if (form.image !== project.image) {
+      // If the image has changed, delete the old one
+      await deleteImage(project.image); // Assume you have a function to delete the image from your storage
+
+      // Upload the new image
+      const newImageUrl = await uploadImage(form.image);
+      if (!newImageUrl.url) throw new Error("Image Url Not Found");
+      imageUrl = newImageUrl.url;
+    }
+
+    // Update the project fields
+    project.title = form.title;
+    project.description = form.description;
+    project.liveSiteUrl = form.liveSiteUrl;
+    project.githubUrl = form.githubUrl;
+    project.category = form.category;
+    project.image = imageUrl;
+
+    await project.save();
+
+    return { success: true, message: "Project Updated Successfully" };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -61,9 +100,30 @@ export async function updateProject(id: string, input: any) {
 // 🛠️ Delete Project
 export async function deleteProject(id: string) {
   try {
+    const session = await getCurrentUser();
+    if (!session.user) throw new Error("Unauthorized Access");
     await connectDB();
-    const deletedProject = await Project.findByIdAndDelete(id);
-    if (!deletedProject) throw new Error("Project not found");
+
+    const project = await Project.findById(id);
+    if (!project) throw new Error("Project not found");
+
+    if (session.user._id.toString() !== project.createdBy.toString()) {
+      throw new Error("Unauthorized Access");
+    }
+
+    // Remove project ID from the user's projects array
+    const user = await User.findById(session.user._id);
+    if (!user) throw new Error("User not found");
+
+    // Remove the project from the user's projects list
+    user.projects = user.projects.filter(
+      (projectId: string) => projectId.toString() !== id
+    );
+    
+    await user.save();
+
+    await deleteImage(project.image);
+    await Project.findByIdAndDelete(id);
 
     return { success: true, deletedId: id };
   } catch (error: any) {
@@ -110,10 +170,12 @@ export async function getProjects(category?: string, endCursor?: string) {
 export async function getProjectById(id: string) {
   try {
     await connectDB();
-    const project = (await Project.findById(id).populate(
-      "createdBy",
-      "name email avatarUrl _id"
-    )) as ProjectInterface;
+    const project = (await Project.findById(id)
+      .select(
+        "title description image liveSiteUrl githubUrl category _id createdBy"
+      )
+      .populate("createdBy", "name email avatarUrl _id")) as ProjectInterface;
+
     if (!project) throw new Error("Project not found");
 
     return { success: true, project };

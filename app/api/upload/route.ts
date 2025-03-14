@@ -28,3 +28,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: error }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  const { url } = await request.json();
+  const public_id = url.split("/").pop().split(".")[0];
+  if (!public_id)
+    return NextResponse.json(
+      { message: "Public ID is required" },
+      { status: 400 }
+    );
+  try {
+    const result = await cloudinary.uploader.destroy(public_id);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json({ message: error }, { status: 500 });
+  }
+}

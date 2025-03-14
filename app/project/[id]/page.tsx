@@ -14,7 +14,7 @@ const ProjectDetails = async ({
 }) => {
   const session = await getCurrentUser();
   const data = await getProjectById(id);
-  const renderLink = () => `/profile/${project?.createdBy?._id}`;
+  const renderLink = () => `/profile/${project?.createdBy?._id.toString()}`;
   if (!data.success)
     return (
       <p className="no-result-text">Failed to fetch project information</p>
@@ -51,7 +51,7 @@ const ProjectDetails = async ({
 
         {session?.user?.email === project?.createdBy?.email && (
           <div className="flex justify-end items-center gap-2">
-            <ProjectActions projectId={project?._id} />
+            <ProjectActions projectId={project?._id.toString()} />
           </div>
         )}
       </section>
@@ -105,8 +105,8 @@ const ProjectDetails = async ({
       </section>
 
       <RelatedProjects
-        userId={project?.createdBy?._id}
-        projectId={project?._id}
+        userId={project?.createdBy?._id as string}
+        projectId={project?._id as string}
       />
     </Modal>
   );
